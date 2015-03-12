@@ -38,7 +38,7 @@ function createConnection() {
       }
     );
     
-	console.log('Created local peer connection');
+	console.log('Created peer connections');
 
 	try {
 		chat1.channel = chat1.peerConnection.createDataChannel('sendDataChannel', {
@@ -54,9 +54,6 @@ function createConnection() {
 	chat1.channel.onopen = function(){handleStateChanged(chat1)};
 	chat1.channel.onclose = function(){handleStateChanged(chat1)};
 	chat1.channel.onmessage = function(event){handleMessage(event,chat1)};
-
-	
-	console.log('Created remote peer connection object');
 
 	chat2.peerConnection.onicecandidate = gotRemoteIceCandidate;
 	chat2.peerConnection.ondatachannel = gotReceiveChannel;
