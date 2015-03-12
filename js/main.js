@@ -24,16 +24,24 @@ function sendData(chat) {
 
 function createConnection() {
   	var servers = null;
-	window.localPeerConnection =
-    new webkitRTCPeerConnection(servers, {
+  	chat1.peerConnection = new webkitRTCPeerConnection(servers, {
       optional: [{
         RtpDataChannels: true
       }]
     });
+    
+    chat2.peerConnection = new webkitRTCPeerConnection(
+      servers, {
+        optional: [{
+          RtpDataChannels: true
+        }]
+      }
+    );
+    
 	console.log('Created local peer connection');
 
 	try {
-		chat1.channel = window.localPeerConnection.createDataChannel('sendDataChannel', {
+		chat1.channel = chat1.peerConnection.createDataChannel('sendDataChannel', {
 			reliable: true
 		});
 		console.log('Created send data channel');
@@ -42,25 +50,18 @@ function createConnection() {
 		  'You need Chrome M25 or later with RtpDataChannel enabled');
 		console.log('createDataChannel() failed with exception: ' + e.message);
 	}
-	window.localPeerConnection.onicecandidate = gotLocalCandidate;
+	chat1.peerConnection.onicecandidate = gotLocalCandidate;
 	chat1.channel.onopen = function(){handleStateChanged(chat1)};
 	chat1.channel.onclose = function(){handleStateChanged(chat1)};
 	chat1.channel.onmessage = function(event){handleMessage(event,chat1)};
 
-	window.remotePeerConnection =
-    new webkitRTCPeerConnection(
-      servers, {
-        optional: [{
-          RtpDataChannels: true
-        }]
-      }
-    );
+	
 	console.log('Created remote peer connection object');
 
-	window.remotePeerConnection.onicecandidate = gotRemoteIceCandidate;
-	window.remotePeerConnection.ondatachannel = gotReceiveChannel;
+	chat2.peerConnection.onicecandidate = gotRemoteIceCandidate;
+	chat2.peerConnection.ondatachannel = gotReceiveChannel;
 
-	window.localPeerConnection.createOffer(gotLocalDescription);
+	chat1.peerConnection.createOffer(gotLocalDescription);
 }
 
 function handleStateChanged(chat) {
@@ -75,7 +76,7 @@ function handleStateChanged(chat) {
 function gotLocalCandidate(event) {
 	console.log('gotLocalCandidate');
 	if (event.candidate) {
-    	window.remotePeerConnection.addIceCandidate(event.candidate);
+		chat2.peerConnection.addIceCandidate(event.candidate);
     	console.log('local ICE candidate: \n ' + event.candidate.candidate);
   	}
 }
@@ -83,7 +84,7 @@ function gotLocalCandidate(event) {
 function gotRemoteIceCandidate(event) {
 	console.log('gotRemoteIceCandidate');
 	if (event.candidate) {
-    	window.localPeerConnection.addIceCandidate(event.candidate);
+		chat1.peerConnection.addIceCandidate(event.candidate);
 	    console.log('remote ICE candidate: \n ' + event.candidate.candidate);
   }
 }
@@ -98,15 +99,15 @@ function gotReceiveChannel(event) {
 
 function gotLocalDescription(desc) {
 	console.log('gotLocalDescription' + desc);
-	window.localPeerConnection.setLocalDescription(desc);
-  	window.remotePeerConnection.setRemoteDescription(desc);
-  	window.remotePeerConnection.createAnswer(gotRemoteDescription);
+	chat1.peerConnection.setLocalDescription(desc);
+	chat2.peerConnection.setRemoteDescription(desc);
+	chat2.peerConnection.createAnswer(gotRemoteDescription);
 }
 
 function gotRemoteDescription(desc) {
 	console.log('Answer from remotePeerConnection \n' + desc.sdp);
-	window.remotePeerConnection.setLocalDescription(desc);
-	window.localPeerConnection.setRemoteDescription(desc);
+	chat2.peerConnection.setLocalDescription(desc);
+	chat1.peerConnection.setRemoteDescription(desc);
 }
 
 function handleMessage(event,chat) {
