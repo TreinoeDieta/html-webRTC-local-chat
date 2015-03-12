@@ -1,0 +1,25 @@
+body {
+	font-family: 'Helvetica'
+}
+
+h1, h3 {
+	text-align: center;
+}
+
+textarea {
+	display: block;
+	margin: 5;
+}
+
+textarea.window {
+	width:400px;
+	height:200px;
+}
+
+textarea.entry {
+	width:400px;
+}
+
+div.chatContainer {
+	display: inline-block;
+}
